@@ -33,7 +33,7 @@ def train_skipgram(model: SkipGramNeg,
     """
     # Define loss and optimizer
     # TODO
-    criterion = None
+    criterion = NegativeSamplingLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     steps = 0
@@ -47,22 +47,25 @@ def train_skipgram(model: SkipGramNeg,
 
             # input, output, and noise vectors
             # TODO
-            input_vectors = None
-            output_vectors = None
-            noise_vectors = None
+            input_vectors = model.forward_input(inputs)
+            output_vectors = model.forward_output(targets)
+            n_samples = 5
+            noise_vectors = model.forward_noise(inputs.shape[0], n_samples)
             
             # negative sampling loss
             # TODO
-            loss = criterion(None, None, None)
-
+            loss = criterion(input_vectors, output_vectors, noise_vectors)
             # Backward step
             # TODO
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
             if steps % print_every == 0:
                 print(f"Epoch: {epoch+1}/{epochs}, Step: {steps}, Loss: {loss.item()}")
                 # Cosine similarity
                 # TODO
-                valid_examples, valid_similarities = cosine_similarity(None, device=device)
+                valid_examples, valid_similarities = cosine_similarity(model.in_embed, valid_size=16, valid_window=100, device=device)
                 _, closest_idxs = valid_similarities.topk(6)
 
                 valid_examples, closest_idxs = valid_examples.to('cpu'), closest_idxs.to('cpu')
